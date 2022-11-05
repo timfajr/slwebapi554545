@@ -4,7 +4,7 @@
   "description": "SLVIDEOLIVE 2022",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
   "keywords": [
     "example",
@@ -17,6 +17,6 @@
     "socket.io": "^4.5.3"
   },
   "engines": {
-    "node": "14.x"
+    "node": "18.x"
   }
 }
