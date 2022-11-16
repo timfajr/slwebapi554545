@@ -153,19 +153,15 @@ setInterval(() => {
     io.emit("videosrc", videosrc);
 }, 500);
 
-var allowedOrigins = ['http://localhost:5173'];
-
-app.use(cors({
-  origin: function(origin, callback){
-    if(!origin) return callback(null, true);
-    if(allowedOrigins.indexOf(origin) === -1){
-      var msg = 'The CORS policy for this site does not ' +
-                'allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+app.use(cors());
+app.use((req,res,next)=>{
+    res.header('Access-Control-Allow-Headers, *, Access-Control-Allow-Origin', 'Origin, X-Requested-with, Content_Type,Accept,Authorization','http://localhost:5173');
+    if(req.method === 'OPTIONS') {
+        res.header('Access-Control-Allow-Methods','PUT,POST,PATCH,DELETE,GET');
+        return res.status(200).json({});
     }
-    return callback(null, true);
-  }
-}));
+    next();
+});
 
 app.use(router);
 app.use('/admin', admin)
