@@ -11,9 +11,9 @@ var utc_timestamp = Date.UTC(now.getUTCFullYear(),now.getUTCMonth(), now.getUTCD
 router.use(express.json());
 
 router.post('/register', async (request, response) => {
-    const data = await Device.find({deviceid : request.body.deviceid});
-    if(data.deviceid == request.body.deviceid){
-        response.status(400).json({message: "user already registered"})
+    const data = await Device.find({deviceid : {$regex: request.body.deviceid}});
+    if(data[0].deviceid == request.body.deviceid){
+        response.status(400).json({message: "user already registered !"})
     }
     else {
     const registeruser = new Device({
