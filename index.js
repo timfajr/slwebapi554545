@@ -79,6 +79,7 @@ var router = express.Router();
 const admin = require('./router/admin');
 const movie = require('./router/movie');
 const upload = require('./router/upload');
+const user = require('./router/user');
 
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
@@ -164,6 +165,7 @@ app.use((req,res,next)=>{
 });
 
 app.use(router);
+app.use('/user', user)
 app.use('/admin', admin)
 app.use('/movie/', movie)
 app.use("/uploads", express.static(__dirname + "/uploads"))
