@@ -1,10 +1,18 @@
-
 var express = require('express');
 var app = express();
 var PORT = 3000;
 const hosturl = "https://api.bluebox.website/"
 const datenow = Date.now()
 const cors = require('cors');
+const bodyParser = require("body-parser");
+
+// JWT
+const JWT_SECRET = process.env.TOKEN_SECRET;
+const JWT_EXPIRATION_TIME = "2"
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+dotenv.config();
+
 
 // Upload Mechanics
 const multer = require("multer");
@@ -157,6 +165,7 @@ setInterval(() => {
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   next();
 });
 
@@ -165,8 +174,8 @@ app.use('/user', user)
 app.use('/admin', admin)
 app.use('/movie/', movie)
 app.use("/uploads", express.static(__dirname + "/uploads"))
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 http.listen(PORT, 'localhost', () => {
   console.log('listening on *:' + PORT);
