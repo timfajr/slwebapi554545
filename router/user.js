@@ -5,17 +5,15 @@ const Secretkey = "Secret777"
 module.exports = router;
 
 // JWT
-const JWT_SECRET = process.env.TOKEN_SECRET;
-const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+const JWT_SECRET = "810e447e4d33bb42a4378b0fbe0d77d2c75e0523b45731cf45d1ec1c4d435f4c";
+const refreshTokenSecret = "920e447e4d33bb42a4378b0fbe0d77d3c75e0523b45731cf45d1ec1c4d435f4c";
 const JWT_EXPIRATION_TIME = "1800s"
 const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv');
 const { response } = require('express');
-dotenv.config();
 
 
-function generateAccessToken( deviceid , ownerid ) {
-    return jwt.sign( { deviceid , ownerid } , JWT_SECRET , { expiresIn: '1800s' });
+function generateAccessToken( device ) {
+    return jwt.sign( { device }, JWT_SECRET , { expiresIn: '1800m' });
   }
 
 const authenticateJWT = (req, res, next) => {
@@ -24,12 +22,12 @@ const authenticateJWT = (req, res, next) => {
     if (authHeader) {
         const token = authHeader.split(' ')[1];
 
-        jwt.verify(token, JWT_SECRET, (err, deviceid, ownerid) => {
+        jwt.verify(token, JWT_SECRET, (err, device) => {
             if (err) {
                 return res.sendStatus(403);
             }
-            req.body.deviceid = deviceid;
-            req.body.ownerid = ownerid;
+            req.body.device.deviceid = device.deviceid;
+            req.body.device.ownerid = device.ownerid;
             next();
         });
     } else {
@@ -44,27 +42,30 @@ var utc_timestamp = Date.UTC(now.getUTCFullYear(),now.getUTCMonth(), now.getUTCD
 router.use(express.json());
 
 router.post('/login', async (request, response) => {
-
-    const data = await Device.find({deviceid : {$regex: request.body.deviceid}});
-    if ( data[0].deviceid  ==  request.body.deviceid && data[0].ownerid == request.body.ownerid  ) {
-
-        // generate an access token //
-        const accessToken = generateAccessToken({ deviceid: request.body.deviceid , ownerid : request.body.ownerid });
-        const refreshToken = jwt.sign({ deviceid: request.body.deviceid , ownerid : request.body.ownerid }, refreshTokenSecret);
-
-        // Push to database here //
-        const updatedData = { $set: {refresh_token: refreshToken} }
-        const options = { new: true };
-        const userdata = await Device.findOneAndUpdate({ deviceid : {$regex: request.body.deviceid}}, updatedData , options );
-
-        response.status(200).json({ message: "success", access_token: accessToken , refresh_token: refreshToken });
-    } else {
-        response.status(400).json({ message: "failure" })
+    const data = await Device.findOne( { deviceid : { $regex: request.body.deviceid }} );
+    if ( data ){
+        if ( data.deviceid  ==  request.body.deviceid && data.ownerid == request.body.ownerid  ) {
+            // generate an access token //
+            const accessToken = generateAccessToken({ deviceid: request.body.deviceid , ownerid : request.body.ownerid });
+            const refreshToken = jwt.sign({ deviceid: request.body.deviceid , ownerid : request.body.ownerid }, refreshTokenSecret);
+    
+            // Push to database here //
+            const updatedData = { $set: {refresh_token: refreshToken} }
+            const options = { new: true };
+            const userdata = await Device.findOneAndUpdate({ deviceid : {$regex: request.body.deviceid}}, updatedData , options );
+    
+            response.status(200).json({ message: "success", access_token: accessToken , refresh_token: refreshToken });
+        } else {
+            response.status(400).json({ message: "failure" })
+        }
+    }
+    else {
+        response.status(400).json({ message: "device not regitered" })
     }
 });
 
 router.post('/register', async (request, response) => { 
-    const token = generateAccessToken({ deviceid: request.body.deviceid , ownerid : request.body.ownerid });
+    const token = generateAccessToken({ deviceid: request.body.deviceid , deviceid : request.body.ownerid });
     const registeruser = new Device({
         deviceid: request.body.deviceid,
         ownerid: request.body.ownerid,
