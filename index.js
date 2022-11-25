@@ -108,7 +108,7 @@ var GlobaluserCount = []
 var Room = []
 
 router.get('/', (req, res) => {
-  res.send('<h1>Bluebox API Beta V.1 🚀</h1>' + '<p> Developed By Getown Resident </p>' + signature);
+  res.send('<h1>Bluebox API Beta V.1 🚀</h1>' + '<p> Developed By Getown Resident </p>');
 })
 
 router.post('/upload', fileupload.single('myVideo'), async (req , res) => {
