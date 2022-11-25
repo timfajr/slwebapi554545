@@ -61,7 +61,7 @@ const fileupload = multer({
 const mongoose = require('mongoose')
 
 mongoose.connect(
-  'mongodb://dataAdmin:AdminXx@localhost:28017/api_test_db',
+  'mongodb://dataAdmin:AdminXx@bluebox.website:27017/api_test_db',
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -209,7 +209,7 @@ io.on('connection', (socket) => {
           const obj = data;
           const roomid = obj.roomid
           const videotime = obj.videotime
-
+          console.log(videotime)
           const value = Roomdata.some(elem => elem.roomid === roomid )
           if( value )
           {
@@ -229,6 +229,8 @@ io.on('connection', (socket) => {
           const obj = data;
           const roomid = obj.roomid
           const host = obj.host
+          console.log(roomid)
+          console.log(host)
 
           const value = Roomdata.some(elem => elem.roomid === roomid )
           if( value )
@@ -236,7 +238,6 @@ io.on('connection', (socket) => {
             for (var i = 0; i < Roomdata.length; ++i) {
               if (Roomdata[i]['roomid'] === roomid) {
                 Roomdata[i]['host'] = host;
-                console.log(Roomdata)
               }
           }}
         })
@@ -256,10 +257,8 @@ io.on('connection', (socket) => {
           for (var i = 0; i < Roomdata.length; ++i) {
             if (Roomdata[i]['roomid'] === roomid) {
               Roomdata[i]['videosrc'] = videosrc;
-              console.log(Roomdata)
             }
         }}
-        console.log(Roomdata)
       })
     })
 
@@ -346,7 +345,7 @@ io.on('connection', (socket) => {
       // Page Change Event
       socket.on('page', (data) => {
         Object.values(Room).forEach( val => {
-  
+          console.log(data)
           // Parse Object
           const obj = data;
           const roomid = obj.roomid
