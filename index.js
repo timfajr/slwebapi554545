@@ -61,7 +61,7 @@ const fileupload = multer({
 const mongoose = require('mongoose')
 
 mongoose.connect(
-  'mongodb://dataAdmin:AdminXx@bluebox.website:27017/api_test_db',
+  'mongodb://dataAdmin:AdminXx@localhost:28017/api_test_db',
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -118,7 +118,8 @@ router.post('/upload', fileupload.single('myVideo'), async (req , res) => {
       const newFile = new UploadFile({ name: filename , url : hosturl + 'uploads/'+ filename });
       await newFile.save()
       res.status(200).json({
-        message: "File created successfully!!",
+        message: "success",
+        data: { name: filename , url : hosturl + 'uploads/'+ filename }
       })
 
   } catch (error) {
@@ -175,6 +176,7 @@ io.on('connection', (socket) => {
       }
     })
 
+    
     socket.join(deviceid);
     ++GlobaluserCount
     io.to(deviceid).emit("user" , parseInt(99999*Math.random()) + "Is Connected");
@@ -322,46 +324,44 @@ io.on('connection', (socket) => {
       })
     })
 
-        // YTStatus Change Event
-        socket.on('ytstatus', (data) => {
-        Object.values(Room).forEach( val => {
-  
-          // Parse Object
-          const obj = data;
-          const roomid = obj.roomid
-          const ytstatus = obj.ytstatus
-  
-          const value = Roomdata.some(elem => elem.roomid === roomid )
-          if( value )
-          {
-            for (var i = 0; i < Roomdata.length; ++i) {
-              if (Roomdata[i]['roomid'] === roomid) {
-                Roomdata[i]['ytstatus'] = ytstatus;
-              }
-          }}
-        })
-      })
+      // YTStatus Change Event
+      socket.on('ytstatus', (data) => {
+      Object.values(Room).forEach( val => {
+        // Parse Object
+        const obj = data;
+        const roomid = obj.roomid
+        const ytstatus = obj.ytstatus
 
-      // Page Change Event
-      socket.on('page', (data) => {
-        Object.values(Room).forEach( val => {
-          console.log(data)
-          // Parse Object
-          const obj = data;
-          const roomid = obj.roomid
-          const page = obj.page
-  
-          const value = Roomdata.some(elem => elem.roomid === roomid )
-          if( value )
-          {
-            for (var i = 0; i < Roomdata.length; ++i) {
-              if (Roomdata[i]['roomid'] === roomid) {
-                Roomdata[i]['page'] = page;
-              }
-          }}
-        })
+        const value = Roomdata.some(elem => elem.roomid === roomid )
+        if( value )
+        {
+          for (var i = 0; i < Roomdata.length; ++i) {
+            if (Roomdata[i]['roomid'] === roomid) {
+              Roomdata[i]['ytstatus'] = ytstatus;
+            }
+        }}
       })
+    })
 
+    // Page Change Event
+    socket.on('page', (data) => {
+      Object.values(Room).forEach( val => {
+        console.log(data)
+        // Parse Object
+        const obj = data;
+        const roomid = obj.roomid
+        const page = obj.page
+
+        const value = Roomdata.some(elem => elem.roomid === roomid )
+        if( value )
+        {
+          for (var i = 0; i < Roomdata.length; ++i) {
+            if (Roomdata[i]['roomid'] === roomid) {
+              Roomdata[i]['page'] = page;
+            }
+        }}
+      })
+    })
   })
 
   // Transmit Controll Interval Stored Data
@@ -385,6 +385,7 @@ io.on('connection', (socket) => {
       }}
     })
   }, 1000)
+
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -394,7 +395,7 @@ app.use(function(req, res, next) {
 
 app.use(router)
 app.use('/user', user)
-app.use('/admin', admin)
+app.use('/admin/', admin)
 app.use('/movie/', movie)
 app.use("/uploads", express.static(__dirname + "/uploads"))
 app.use(bodyParser.urlencoded({ extended: false }))

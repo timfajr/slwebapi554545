@@ -15,6 +15,6 @@ const uploadSchema = new mongoose.Schema({
     }
 })
 
-const UploadFile = mongoose.model("movie", uploadSchema);
+const UploadFile = mongoose.model("Moviefile", uploadSchema);
 
 module.exports = { UploadFile };

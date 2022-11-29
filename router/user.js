@@ -1,39 +1,35 @@
 const express = require('express');
 const router = express.Router()
 const { Device } = require('../models/device');
-const Secretkey = "Secret777"
 module.exports = router;
 
-// JWT
+// JWT 30 Day Expired
 const JWT_SECRET = "810e447e4d33bb42a4378b0fbe0d77d2c75e0523b45731cf45d1ec1c4d435f4c";
 const refreshTokenSecret = "920e447e4d33bb42a4378b0fbe0d77d3c75e0523b45731cf45d1ec1c4d435f4c";
-const JWT_EXPIRATION_TIME = "1800s"
+const JWT_EXPIRATION_TIME = "30d"
 const jwt = require('jsonwebtoken');
 const { response } = require('express');
 
 
 function generateAccessToken( device ) {
-    return jwt.sign( { device }, JWT_SECRET , { expiresIn: '1800m' });
+    return jwt.sign( { device }, JWT_SECRET , { expiresIn: JWT_EXPIRATION_TIME });
   }
 
 const authenticateJWT = (req, res, next) => {
-    const authHeader = req.headers.authorization;
+    const authHeader = req.headers.access_token;
 
     if (authHeader) {
-        const token = authHeader.split(' ')[1];
-
-        jwt.verify(token, JWT_SECRET, (err, device) => {
+        const token = authHeader
+        jwt.verify(token, JWT_SECRET, (err) => {
             if (err) {
-                return res.sendStatus(403);
+                return res.status(403).send({ error: err.message })
             }
-            req.body.device.deviceid = device.deviceid;
-            req.body.device.ownerid = device.ownerid;
-            next();
-        });
+            next()
+        })
     } else {
         res.sendStatus(401);
     }
-};
+}
 
 var now = new Date;
 var utc_timestamp = Date.UTC(now.getUTCFullYear(),now.getUTCMonth(), now.getUTCDate() , 

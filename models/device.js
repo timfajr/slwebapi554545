@@ -2,17 +2,14 @@ const mongoose = require('mongoose');
 
 const DeviceSchema = new mongoose.Schema({
     deviceid: {
-        required: true,
         type: String
     },
     ownerid: {
-        required: true,
         type: String
     },
     activeregion: [{
         regionurl: {
-            type: String,
-            required: true
+            type: String
         },
         login_date: {
             type: Date
@@ -51,6 +48,4 @@ const DeviceSchema = new mongoose.Schema({
     }]
 })
 
-const Device = mongoose.model("devices", DeviceSchema);
-
-module.exports = { Device };
+module.exports = mongoose.model("devices", DeviceSchema)
