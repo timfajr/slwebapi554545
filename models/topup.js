@@ -1,7 +1,10 @@
 const mongoose = require('mongoose');
 
 const TopupSchema = new mongoose.Schema({
-    roomid:{
+    deviceid:{
+        type: String
+    },
+    ownerid:{
         type: String
     },
     value: {

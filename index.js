@@ -25,10 +25,21 @@ const jwt = require('jsonwebtoken')
 const multer = require("multer")
 const path = require("path")
 const { UploadFile } = require("./models/upload")
+const { UploadImage } = require("./models/upload_image")
 
 const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads");
+    cb(null, "uploads/movies");
+  },
+  filename: (req, file, cb) => {
+    const ext = file.mimetype.split("/")[1];
+    cb(null, `${file.originalname}-${datenow}.${ext}`)
+  },
+})
+
+const imageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/movies/images/");
   },
   filename: (req, file, cb) => {
     const ext = file.mimetype.split("/")[1];
@@ -52,9 +63,30 @@ const multerFilter = (req, file, cb) => {
   }
 };
 
+const imageFilter = (req, file, cb) => {
+  const MIME_TYPE_MAP = {
+    'image/jpeg': 'jpeg',
+    'image/pjpeg': 'jpg',
+    'image/x-citrix-jpeg': 'jpg',
+    'image/jp2': 'jpg2',
+    'image/x-png': 'png',
+    'image/jpeg': 'jpg'
+ }
+  if (MIME_TYPE_MAP[file.mimetype]) {
+    cb(null, true);
+  } else {
+    cb(new Error("Not in allowed list"), true);
+  }
+};
+
 const fileupload = multer({
   storage: multerStorage,
   fileFilter: multerFilter,
+});
+
+const imageupload = multer({
+  storage: imageStorage,
+  fileFilter: imageFilter,
 });
 
 // DataBase Connection
@@ -115,11 +147,27 @@ router.post('/upload', fileupload.single('myVideo'), async (req , res) => {
   try {
       const ext = req.file.mimetype.split("/")[1];
       const filename = `${req.file.originalname}-${datenow}.${ext}`
-      const newFile = new UploadFile({ name: filename , url : hosturl + 'uploads/'+ filename });
+      const newFile = new UploadFile({ name: filename , url : hosturl + 'uploads/movies/'+ filename });
       await newFile.save()
       res.status(200).json({
         message: "success",
-        data: { name: filename , url : hosturl + 'uploads/'+ filename }
+        data: { name: filename , url : hosturl + 'uploads/movies/'+ filename }
+      })
+
+  } catch (error) {
+    res.status(400).send({ error: error.message })
+  }
+})
+
+router.post('/uploadimage', imageupload.single('myImage'), async (req , res) => {
+  try {
+      const ext = req.file.mimetype.split("/")[1];
+      const filename = `${req.file.originalname}-${datenow}.${ext}`
+      const newFile = new UploadImage({ name: filename , url : hosturl + 'uploads/movies/images/'+ filename });
+      await newFile.save()
+      res.status(200).json({
+        message: "success",
+        data: { name: filename , url : hosturl + 'uploads/movies/images/'+ filename }
       })
 
   } catch (error) {

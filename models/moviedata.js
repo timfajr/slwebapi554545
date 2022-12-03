@@ -7,34 +7,23 @@ const MovieSchema = new mongoose.Schema({
     description: {
         type: String
     },
-    price: {
-        type: Number
-    },
     genre: {
         type: String
     },
-    genre: {
-        type: String
-    },
-    discount: {
-        type: Number
-    },
-    rentprice: {
-        type: Number
-    },
-    discounted: {
-        type: Boolean
-    },
+
+    // Bool
     topick: {
         type: Boolean
     },
-    published: {
-        type: Boolean
-    },
+
+    // Generated from API
     url: {
         type: String
     },
-    purchased: {
+    imgurl: {
+        type: String
+    },
+    watched: {
         type: Number
     },
     created_at: {

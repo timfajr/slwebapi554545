@@ -89,7 +89,7 @@ router.post('/login', async (request, response) => {
             // Push to database here //
             const updatedData = { $set: {refresh_token: refreshToken} }
             const options = { new: true }
-            const userdata = await Admin.findOneAndUpdate({ username : {$regex: request.body.username}}, updatedData , options )
+            Admin.findOneAndUpdate({ username : {$regex: request.body.username}}, updatedData , options )
     
             response.status(200).json({ message: "success", access_token: accessToken , refresh_token: refreshToken })
         } else {
@@ -107,12 +107,11 @@ router.post('/post/movie' , async (req, res) => {
     const data = new Moviedata({
         title: req.body.title,
         description: req.body.description,
-        price: req.body.price,
-        discount: req.body.discount,
-        discounted: req.body.discounted,
-        topick: req.body.topick,
+        genre: req.body.genre,
         published: req.body.published,
-        url: req.body.url
+        url: req.body.url,
+        topick: req.body.topick,
+        imgurl: req.body.imgurl
     })
 
     try {
@@ -176,27 +175,6 @@ router.get('/getmovie', authenticateJWT , async (req, res) => {
     }
 })
 
-//Get by Movie ID
-router.get('/getmovie/:id', async (req, res) => {
-    try {
-        const data = await Moviedata.findById(req.params.id,{ __v:0, url:0 })
-        res.json(data)
-    }
-    catch (error) {
-        res.status(500).json({message: error.message})
-    }
-})
-
-//Get by ID Method
-router.get('/getOne/:id', async (req, res) => {
-    try {
-        const data = await Model.findById(req.params.id)
-        res.json(data)
-    }
-    catch (error) {
-        res.status(500).json({message: error.message})
-    }
-})
 
 //Update by ID Method
 router.patch('/update/:id', async (req, res) => {

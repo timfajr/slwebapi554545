@@ -1,51 +1,87 @@
 const mongoose = require('mongoose');
 
 const DeviceSchema = new mongoose.Schema({
-    deviceid: {
-        type: String
-    },
+
     ownerid: {
         type: String
     },
-    activeregion: [{
-        regionurl: {
-            type: String
-        },
-        login_date: {
-            type: Date
-        }
-    }],
-    access_token :{
+
+    // API Generated
+    subscription: {
         type: String
     },
-    refresh_token :{
-        type: String
-    },
-    created_at: {
-        type: Date
-    },
-    purchased_movie: [{
-        movie_title: {
-            type: String
+
+    devices: [{
+        deviceid: {
+            type : String
         },
-        movie_description: {
-            type: String
-        },
-        purchased_at: {
-            type: Date
-        }
+        activeregion: [{
+            regionurl: {
+                type: String
+            },
+            login_date: {
+                type: Date
+            }
+        }],
     }],
+
     transaction: [{
+        ownerid: {
+            type : String
+        },
         item: {
             type: String
         },
-        price: {
-            type: String
+        quantity: {
+            type: Number
         },
-        transaction_at: {
-            type: Date
+        price: {
+            type: Number
+        },
+        total: {
+            type: Number
+        },
+        gift:{
+            type: Boolean,
+            default: false
+        },
+        gift_ownerid:{
+            type: String,
+            default: ''
+        },
+        created_at: {
+            type: Date,
+            default: Date.now,
         }
-    }]
+    }],
+
+    refreshtoken: {
+        type: String
+    },
+
+    expires: {
+        type: Date
+    },
+
+    timeleft: {
+        type: Number
+    },
+
+    total_watch: {
+        type: Number
+    },
+
+    balance: {
+        type: Number
+    },
+
+    secret:{
+        type: String
+    },
+
+    created_at: {
+        type: Date
+    },
 })
 
 module.exports = mongoose.model("devices", DeviceSchema)
