@@ -18,6 +18,7 @@ function generateAccessToken( device ) {
 
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers.access_token
+    console.log(authHeader)
     if (authHeader) {
         const token = authHeader
         jwt.verify(token, JWT_SECRET, (err, decoded) => {
@@ -51,6 +52,38 @@ router.post('/login', async (request, response) => {
     if ( data && devicedata ){
         if ( data.ownerid  ==  request.body.ownerid ) {
 
+            // Checking subcription time
+            var date30 = new Date(data.expires)
+            var setday = date30.setDate(date30.getDate() + 30)
+            var updateday = new Date(setday)
+            const timeDifference = updateday.getTime() - datenow.getTime()
+
+            // Save Subcription Data
+            if ( timeDifference <= 0 ) {
+                const updatedData = { 
+                    $set: 
+                    {
+                        'subscription' : "expired",
+                        'timeleft': 0
+                    }
+                }
+                const options = { new: false }
+                const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
+            }
+
+            // Save Subcription Data
+            if ( timeDifference > 0 ) {
+                const updatedData = { 
+                    $set: 
+                    {
+                        'subscription' : "active",
+                        'timeleft' : Math.ceil( timeDifference / daysinms)
+                    }
+                }
+                const options = { new: false }
+                const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
+            }
+            
             // generate an access token //
             const accessToken = generateAccessToken({ deviceid: request.body.deviceid , ownerid : request.body.ownerid })
             const refreshToken = jwt.sign({ deviceid: request.body.deviceid , ownerid : request.body.ownerid }, refreshTokenSecret)
@@ -141,59 +174,82 @@ router.post('/inworld/30daysub', async (request, response) => {
     const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
     const itemprice = 300
     const qty = 1
-
-    try{
-        var date30 = new Date(data.expires)
-        var setday = date30.setDate(date30.getDate() + 30)
-        var updateday = new Date(setday)
-        const timeDifference= Math.abs(updateday.getTime() - datenow.getTime())
-        const updatedData = { 
-            $set: 
-            {
-                'subscription' : "active",
-                'expires' : setday,
-                'timeleft' : Math.ceil(timeDifference / daysinms)
-            }
-        }
-        const options = { new: false }
-        const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
-        const result = await Device.findOne({ ownerid : {$regex: request.body.ownerid}})
-
-        try{
-            const transaction = new Transaction({
-                ownerid: request.body.ownerid,
-                item: 'subs30',
-                quantity: qty,
-                price: itemprice,
-                total: itemprice * qty,
-                gift: false,
-                gift_ownerid: ''
-            })
-            const updatedData = { 
-                $push: 
-                {
-                    'transaction' : [{
-                        ownerid: request.body.ownerid,
-                        item: 'subs30',
-                        quantity: qty,
-                        price: itemprice,
-                        total: itemprice * qty,
-                        gift: false,
-                        gift_ownerid: ''
-                    }]
+    if (request.body.secret == data.secret){
+        try {
+            var date30 = new Date(data.expires)
+            var setday = date30.setDate(date30.getDate() + 30)
+            var updateday = new Date(setday)
+            const timeDifference = updateday.getTime() - datenow.getTime()
+            if ( timeDifference <= 0 ){
+                console.log('hit')
+                var date30 = new Date(datenow)
+                var setday = date30.setDate(date30.getDate() + ( 30 * qty ) )
+                var updateday = new Date(setday)
+                const timeDifference= updateday.getTime() - datenow.getTime()
+                updatedData = { 
+                    $set: 
+                    {
+                        'subscription' : "active",
+                        'expires' : setday,
+                        'timeleft' : Math.ceil( timeDifference / daysinms),
+                        'balance' : data.balance - itemprice
+                    }
                 }
             }
-            const options = { new: true }
-            const transactiondone = await transaction.save()
+            else {
+                updatedData = { 
+                    $set: 
+                    {
+                        'subscription' : "active",
+                        'expires' : setday,
+                        'timeleft' : Math.ceil( timeDifference / daysinms) ,
+                        'balance' : data.balance - itemprice
+                    }
+                }
+            }
+            const options = { new: false }
             const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
-            response.status(200).json({ message: 'success', ownerid: request.body.ownerid , item : 'subs30' , ammount: "L$ "+ transactiondone.total , timeleft: result.timeleft +" Day", created_at: new Date(transactiondone.created_at).toISOString().replace(/T/, ' ').replace(/\..+/, '') })
+            const result = await Device.findOne({ ownerid : {$regex: request.body.ownerid}})
+            
+            try {
+                const transaction = new Transaction({
+                    ownerid: request.body.ownerid,
+                    item: 'subs30',
+                    quantity: qty,
+                    price: itemprice,
+                    total: itemprice * qty,
+                    gift: false,
+                    gift_ownerid: ''
+                })
+                const updatedData = { 
+                    $push: 
+                    {
+                        'transaction' : [{
+                            ownerid: request.body.ownerid,
+                            item: 'subs30',
+                            quantity: qty,
+                            price: itemprice,
+                            total: itemprice * qty,
+                            gift: false,
+                            gift_ownerid: ''
+                        }]
+                    }
+                }
+                const options = { new: true }
+                const transactiondone = await transaction.save()
+                const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
+                response.status(200).json({ message: 'success', ownerid: request.body.ownerid , item : 'subs30' , ammount: "L$ "+ transactiondone.total , timeleft: result.timeleft +" Day", created_at: new Date(transactiondone.created_at).toISOString().replace(/T/, ' ').replace(/\..+/, '') })
+            }
+            catch(error){
+                response.status(500).json({ message: error.message })
+            }
         }
         catch(error){
             response.status(500).json({ message: error.message })
         }
     }
-    catch(error){
-        response.status(500).json({ message: error.message })
+    else {
+        response.status(500).json({ message: "Not Authorized - Reported" })
     }
 })
 
@@ -204,20 +260,39 @@ router.post('/inworld/30daysub', async (request, response) => {
 router.post('/30daysub', async (request, response) => {
     const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
     const itemprice = 300
-    const qty = 1
+    const qty = request.body.qty || 1
     if ( data.balance >= itemprice ){
     try {
         var date30 = new Date(data.expires)
-        var setday = date30.setDate(date30.getDate() + 30)
+        var setday = date30.setDate(date30.getDate() + ( 30 * qty ) )
         var updateday = new Date(setday)
-        const timeDifference= Math.abs(updateday.getTime() - datenow.getTime())
-        const updatedData = { 
-            $set: 
-            {
-                'subscription' : "active",
-                'expires' : setday,
-                'timeleft' : Math.ceil(timeDifference / daysinms),
-                'balance' : data.balance - itemprice
+        const timeDifference= updateday.getTime() - datenow.getTime()
+        var updatedData= {}
+        if ( timeDifference <= 0 ){
+            console.log('hit')
+            var date30 = new Date(datenow)
+            var setday = date30.setDate(date30.getDate() + ( 30 * qty ) )
+            var updateday = new Date(setday)
+            const timeDifference= updateday.getTime() - datenow.getTime()
+            updatedData = { 
+                $set: 
+                {
+                    'subscription' : "active",
+                    'expires' : setday,
+                    'timeleft' : Math.ceil( timeDifference / daysinms),
+                    'balance' : data.balance - itemprice
+                }
+            }
+        }
+        else {
+            updatedData = { 
+                $set: 
+                {
+                    'subscription' : "active",
+                    'expires' : setday,
+                    'timeleft' : Math.ceil( timeDifference / daysinms) ,
+                    'balance' : data.balance - itemprice
+                }
             }
         }
         const options = { new: false }
@@ -369,12 +444,21 @@ router.get('/requestmovie', async (request, response) => {
 router.get('/me', authenticateJWT, async (request, response) => { 
     const decoded = jwt.verify(request.headers.access_token, JWT_SECRET)
     try {
-        const data = await Device.findOne( { 'devices.deviceid' : { $regex: decoded.device.deviceid }} , {__v:0,ownerid:0,created_at:0,access_token:0,refresh_token:0,_id:0, devices:0} )
+        const data = await Device.findOne( { 'devices.deviceid' : { $regex: decoded.device.deviceid }},{__v:0,transaction:0,ownerid:0,created_at:0,access_token:0,refresh_token:0,_id:0, devices:0})
         if ( data ){
-            response.status(200).json({ message : "success"})
+            const transaction = await Device.aggregate([
+                { $match: { 'devices.deviceid': { $regex: decoded.device.deviceid } }},
+                { $unwind: '$transaction' },
+                { $sort: { 'transaction.created_at': -1 }},
+                { $group: { _id: '$_id', transaction: { $push: '$transaction'}}}])
+            var total = 0;
+            for (i in transaction[0].transaction) {
+                total += transaction[0].transaction[i].total;
+            }
+            response.status(200).json({ message : data,totaltransaction : total , transaction: transaction[0].transaction})
         }
         else {
-            response.status(400).json({ message: error.message })
+            response.status(400).json({ message: error.message})
         }
     }
 

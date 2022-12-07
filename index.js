@@ -21,6 +21,45 @@ const refreshTokenSecret = "920e447e4d33bb42a4378b0fbe0d77d3c75e0523b45731cf45d1
 const JWT_EXPIRATION_TIME = "1800s"
 const jwt = require('jsonwebtoken')
 
+// JWT ADMIN 1 Day Expired
+const JWT_SECRET_admin = "810e447e4d33bb42a4378b0fbe0d77d2c75e0523b45731cf45d1ec1c4d435f4c"
+
+// Token 
+function generateAccessToken( user ) {
+    return jwt.sign( { user }, JWT_SECRET , { expiresIn: JWT_EXPIRATION_TIME })
+}
+
+const authenticateJWT = (req, res, next) => {
+    const authHeader = req.headers.access_token
+    if (authHeader) {
+        const token = authHeader
+        jwt.verify(token, JWT_SECRET, (err) => {
+            if (err) {
+                return res.status(403).send({ error: err.message })
+            }
+            next()
+        })
+    } else {
+        res.sendStatus(401)
+    }
+}
+
+const authenticateadminJWT = (req, res, next) => {
+  const authHeader = req.headers.access_token
+  if (authHeader) {
+      const token = authHeader
+      jwt.verify(token, JWT_SECRET_admin, (err) => {
+          if (err) {
+              return res.status(403).send({ error: err.message })
+          }
+          next()
+      })
+  } else {
+      res.sendStatus(401)
+  }
+}
+
+
 // Upload Mechanics
 const multer = require("multer")
 const path = require("path")
@@ -143,7 +182,7 @@ router.get('/', (req, res) => {
   res.send('<h1>Bluebox API Beta V.1 🚀</h1>' + '<p> Developed By Getown Resident </p>');
 })
 
-router.post('/upload', fileupload.single('myVideo'), async (req , res) => {
+router.post('/upload',authenticateadminJWT, fileupload.single('myVideo'), async (req , res) => {
   try {
       const ext = req.file.mimetype.split("/")[1];
       const filename = `${req.file.originalname}-${datenow}.${ext}`
@@ -159,7 +198,7 @@ router.post('/upload', fileupload.single('myVideo'), async (req , res) => {
   }
 })
 
-router.post('/uploadimage', imageupload.single('myImage'), async (req , res) => {
+router.post('/uploadimage',authenticateadminJWT, imageupload.single('myImage'), async (req , res) => {
   try {
       const ext = req.file.mimetype.split("/")[1];
       const filename = `${req.file.originalname}-${datenow}.${ext}`
@@ -436,7 +475,7 @@ io.on('connection', (socket) => {
 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept , access_token");
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   next()
 })
@@ -445,7 +484,7 @@ app.use(router)
 app.use('/user', user)
 app.use('/admin/', admin)
 app.use('/movie/', movie)
-app.use("/uploads", express.static(__dirname + "/uploads"))
+app.use("/uploads", express.static(__dirname + "/uploads/"))
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 

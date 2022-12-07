@@ -28,7 +28,6 @@ function generateAccessToken( user ) {
 
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers.access_token
-
     if (authHeader) {
         const token = authHeader
         jwt.verify(token, JWT_SECRET, (err) => {
@@ -102,7 +101,7 @@ router.post('/login', async (request, response) => {
 })
 
 //Post Method
-router.post('/post/movie' , async (req, res) => {
+router.post('/post/movie', authenticateJWT , async (req, res) => {
 
     const data = new Moviedata({
         title: req.body.title,
@@ -125,7 +124,7 @@ router.post('/post/movie' , async (req, res) => {
 })
 
 // Pagination user table
-router.get('/getdevices', async (req, res) => {
+router.get('/getdevices', authenticateJWT, async (req, res) => {
     // destructure page and limit and set default values
     const { page = 1, limit = 10 , sortBy = "_id"} = req.query;
     try {
@@ -140,6 +139,35 @@ router.get('/getdevices', async (req, res) => {
       // get total documents in the Posts collection 
       const count = await Device.countDocuments();
   
+      // return response with posts, total pages, and current page
+      res.json({
+        devices,
+        totalPages: Math.ceil(count / limit),
+        totalitem: count,
+        pageitem: limit ,
+        currentPage: page
+      });
+    } catch (err) {
+      console.error(err.message);
+    }
+  });
+
+// Pagination user table
+router.get('/gettransaction', async (req, res) => {
+    // destructure page and limit and set default values
+    const { page = 1, limit = 10 , sortBy = "_id"} = req.query;
+    try {
+        
+      // execute query with page and limit values
+      const devices = await Transaction.find({},{__v:0 })
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .sort(sortBy)
+        .exec();
+        
+      // get total documents in the Posts collection 
+      const count = await Transaction.countDocuments();
+
       // return response with posts, total pages, and current page
       res.json({
         devices,
@@ -177,7 +205,7 @@ router.get('/getmovie', authenticateJWT , async (req, res) => {
 
 
 //Update by ID Method
-router.patch('/update/:id', async (req, res) => {
+router.patch('/update/:id', authenticateJWT, async (req, res) => {
     try {
         const id = req.params.id
         const updatedData = req.body
@@ -195,7 +223,7 @@ router.patch('/update/:id', async (req, res) => {
 })
 
 //Delete by ID Method
-router.delete('/delete/:id', async (req, res) => {
+router.delete('/delete/:id', authenticateJWT, async (req, res) => {
     try {
         const id = req.params.id;
         const data = await Model.findByIdAndDelete(id)
@@ -206,6 +234,6 @@ router.delete('/delete/:id', async (req, res) => {
     }
 })
 
-router.get('/token', authenticateJWT , async (req, res) => {
+router.post('/token', authenticateJWT , async (req, res) => {
     res.status(200).json({ message: "success"})
 })
