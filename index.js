@@ -278,6 +278,7 @@ io.on('connection', (socket) => {
           "ytsrc": '',
           "yttime": '',
           "page": '',
+          "topup": 'disable',
           "usercount" : 1 } 
           )
       }
@@ -450,6 +451,25 @@ io.on('connection', (socket) => {
       })
     })
 
+    // Topup Trigger Change Event
+    socket.on('topup', (data) => {
+      Object.values(Room).forEach( val => {
+        // Parse Object
+        const obj = data;
+        const roomid = obj.roomid
+        const topup = obj.topup
+
+        const value = Roomdata.some(elem => elem.roomid === roomid )
+        if( value )
+        {
+          for (var i = 0; i < Roomdata.length; ++i) {
+            if (Roomdata[i]['roomid'] === roomid) {
+              Roomdata[i]['topup'] = topup;
+            }
+        }}
+      })
+    })
+
     // Page Change Event
     socket.on('page', (data) => {
       Object.values(Room).forEach( val => {
@@ -487,7 +507,9 @@ io.on('connection', (socket) => {
             io.to(val).emit("ytsrc", Roomdata[i].ytsrc);
             io.to(val).emit("yttime", Roomdata[i].yttime);
             io.to(val).emit("page", Roomdata[i].page);
+            io.to(val).emit("topup", Roomdata[i].topup);
             io.to(val).emit("usercount", Roomdata[i].usercount);
+            Roomdata[i].topup = "false"
           }
       }}
     })

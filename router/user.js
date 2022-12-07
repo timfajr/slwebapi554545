@@ -444,24 +444,31 @@ router.get('/requestmovie', async (request, response) => {
 router.get('/me', authenticateJWT, async (request, response) => { 
     const decoded = jwt.verify(request.headers.access_token, JWT_SECRET)
     try {
-        const data = await Device.findOne( { 'devices.deviceid' : { $regex: decoded.device.deviceid }},{__v:0,transaction:0,ownerid:0,created_at:0,access_token:0,refresh_token:0,_id:0, devices:0})
-        if ( data.transaction ){
-            const transaction = await Device.aggregate([
-                { $match: { 'devices.deviceid': { $regex: decoded.device.deviceid } }},
-                { $unwind: '$transaction' },
-                { $sort: { 'transaction.created_at': -1 }},
-                { $group: { _id: '$_id', transaction: { $push: '$transaction'}}}])
-            var total = 0;
-            for (i in transaction[0].transaction) {
-                total += transaction[0].transaction[i].total;
+        const data = await Device.findOne( { 'devices.deviceid' : { $regex: decoded.device.deviceid }},{__v:0,created_at:0,access_token:0,refresh_token:0,_id:0, devices:0})
+        if ( data ){
+            if ( data.transaction.length !== 0 ){
+                const transaction = await Device.aggregate([
+                    { $match: { 'devices.deviceid': { $regex: decoded.device.deviceid } }},
+                    { $unwind: '$transaction' },
+                    { $sort: { 'transaction.created_at': -1 }},
+                    { $group: { _id: '$_id', transaction: { $push: '$transaction'}}}])
+                if( transaction.length !== 0 ){
+                        console.log('hit')
+                        var total = 0;
+                        for (i in transaction[0].transaction) {
+                            total += transaction[0].transaction[i].total;
+                        }
+                        response.status(200).json({ message : data,totaltransaction : total , transaction: transaction[0].transaction})
+                 }
             }
-            response.status(200).json({ message : data,totaltransaction : total , transaction: transaction[0].transaction})
+            else {
+                response.status(200).json({ message : data })
+            }
         }
         else {
             response.status(400).json({ message: error.message})
         }
     }
-
     catch (error) {
         response.status(400).json({ message: error.message })
     }
