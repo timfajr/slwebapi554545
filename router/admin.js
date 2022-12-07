@@ -11,6 +11,13 @@ const Secretkey = "Secret777"
 
 router.use(express.json())
 
+'     ______       __                        '
+'    / ____/___   / /_ ____  _      __ ____  '
+'   / / __ / _ \ / __// __ \| | /| / // __ \ '
+'  / /_/ //  __// /_ / /_/ /| |/ |/ // / / / '
+'  \____/ \___/ \__/ \____/ |__/|__//_/ /_/  '
+'                                            '
+
 var now = new Date;
 var utc_timestamp = Date.UTC(now.getUTCFullYear(),now.getUTCMonth(), now.getUTCDate() , 
       now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds())
@@ -153,7 +160,7 @@ router.get('/getdevices', authenticateJWT, async (req, res) => {
   });
 
 // Pagination user table
-router.get('/gettransaction', async (req, res) => {
+router.get('/gettransaction', authenticateJWT , async (req, res) => {
     // destructure page and limit and set default values
     const { page = 1, limit = 10 , sortBy = "_id"} = req.query;
     try {
@@ -192,16 +199,34 @@ router.get('/getadmin', authenticateJWT , async (req, res) => {
     }
 })
 
-//Get all Movie
-router.get('/getmovie', authenticateJWT , async (req, res) => {
-    try{
-        const data = await Moviedata.find({},{ __v:0 })
-        res.json(data)
+// Pagination movie table
+router.get('/getAll', authenticateJWT , async (req, res) => {
+    // destructure page and limit and set default values
+    const { page = 1, limit = 12 , sortBy = "-created_at"} = req.query;
+    try {
+        
+      // execute query with page and limit values
+      const data = await Moviedata.find({},{__v:0})
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .sort(sortBy)
+        .exec();
+  
+      // get total documents in the Posts collection 
+      const count = await Moviedata.countDocuments();
+  
+      // return response with posts, total pages, and current page
+      res.json({
+        data : data,
+        totalPages: Math.ceil(count / limit),
+        totalitem: count,
+        pageitem: limit ,
+        currentPage: page
+      });
+    } catch (err) {
+      console.error(err.message);
     }
-    catch (error) {
-        res.status(500).json({message: error.message})
-    }
-})
+});
 
 
 //Update by ID Method

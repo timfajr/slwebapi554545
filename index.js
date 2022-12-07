@@ -66,6 +66,9 @@ const path = require("path")
 const { UploadFile } = require("./models/upload")
 const { UploadImage } = require("./models/upload_image")
 
+// Genre Mongoose
+const Moviedata = require('./models/moviedata');
+
 const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/movies");
@@ -177,6 +180,23 @@ const Roomdata = []
 
 var GlobaluserCount = []
 var Room = []
+
+// Global Genre Stash
+var genre = []
+const getGenre = async () => {
+  const data = await Moviedata.aggregate([
+    { $match: { }},
+    { $unwind: '$genre' },
+    { $group: { _id: '$genre'}}
+  ])
+  Object.values(data).forEach( val => {
+    genre.push(val._id)
+  })
+}
+
+router.get('/genre', (req, res) => {
+  res.send({ data : genre });
+})
 
 router.get('/', (req, res) => {
   res.send('<h1>Bluebox API Beta V.1 🚀</h1>' + '<p> Developed By Getown Resident </p>');
@@ -451,7 +471,7 @@ io.on('connection', (socket) => {
     })
   })
 
-  // Transmit Controll Interval Stored Data
+  // Transmit Control Interval Stored Data
   setInterval(() => {
     Object.values(Room).forEach( val => {
       const value = Roomdata.some(elem => elem.roomid === val )
@@ -490,4 +510,5 @@ app.use(bodyParser.json())
 
 http.listen(PORT, HOST, () => {
   console.log('listening on *:' + PORT)
+  getGenre()
 })
