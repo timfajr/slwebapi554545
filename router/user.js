@@ -445,7 +445,7 @@ router.get('/me', authenticateJWT, async (request, response) => {
     const decoded = jwt.verify(request.headers.access_token, JWT_SECRET)
     try {
         const data = await Device.findOne( { 'devices.deviceid' : { $regex: decoded.device.deviceid }},{__v:0,transaction:0,ownerid:0,created_at:0,access_token:0,refresh_token:0,_id:0, devices:0})
-        if ( data ){
+        if ( data.transaction ){
             const transaction = await Device.aggregate([
                 { $match: { 'devices.deviceid': { $regex: decoded.device.deviceid } }},
                 { $unwind: '$transaction' },
