@@ -65,7 +65,7 @@ router.get('/getTop', authenticateJWT , async (req, res) => {
   try {
     const query1 = { topick : true }
     // execute query with page and limit values
-    const data = await Moviedata.find( query1 ,{__v:0 , _id:0 })
+    const data = await Moviedata.find( query1 ,{ __v:0 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort(sortBy)
@@ -94,7 +94,7 @@ router.get('/getgenre', authenticateJWT , async (req, res) => {
   try {
     const query1 = { genre : { $regex : genre } }
     // execute query with page and limit values
-    const data = await Moviedata.find( query1 ,{__v:0 , created_at:0, _id:0, topick:0 })
+    const data = await Moviedata.find( query1 ,{__v:0 , created_at:0, topick:0 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort(sortBy)
@@ -154,7 +154,7 @@ router.get('/search', authenticateJWT, async (req, res) => {
   try {
     const query1 = { title : { $regex : title } }
     // execute query with page and limit values
-    const data = await Moviedata.find(query1,{__v:0 , created_at:0, _id:0})
+    const data = await Moviedata.find(query1,{__v:0 , created_at:0})
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort(sortBy)
