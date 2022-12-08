@@ -121,7 +121,7 @@ router.get('/getid', authenticateJWT , async (req, res) => {
   // destructure page and limit and set default values
   const { page = 1, limit = 10 , sortBy = "created_at" , id= ""} = req.query;
   try {
-    const query1 = { id : { $regex : id } }
+    const query1 = { _id : id }
     // execute query with page and limit values
     const data = await Moviedata.findOne( query1 ,{__v:0 , created_at:0, topick:0 })
       .limit(limit * 1)
