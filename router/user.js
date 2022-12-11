@@ -8,7 +8,7 @@ module.exports = router
 // JWT 30 Day Expired
 const JWT_SECRET = "810e447e4d33bb42a4378b0fbe0d77d2c75e0523b45731cf45d1ec1c4d435f4c"
 const refreshTokenSecret = "920e447e4d33bb42a4378b0fbe0d77d3c75e0523b45731cf45d1ec1c4d435f4c"
-const JWT_EXPIRATION_TIME = "30d"
+const JWT_EXPIRATION_TIME = "3d"
 const jwt = require('jsonwebtoken')
 const { response } = require('express')
 
@@ -173,7 +173,7 @@ router.post('/register', async (request, response) => {
 router.post('/inworld/30daysub', async (request, response) => {
     const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
     const itemprice = 300
-    const qty = 1
+    const qty = request.body.qty || 1
     if (request.body.secret == data.secret){
         try {
             var date30 = new Date(data.expires)

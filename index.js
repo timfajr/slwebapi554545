@@ -18,7 +18,7 @@ const bodyParser = require("body-parser");
 
 const JWT_SECRET = "810e447e4d33bb42a4378b0fbe0d77d2c75e0523b45731cf45d1ec1c4d435f4c"
 const refreshTokenSecret = "920e447e4d33bb42a4378b0fbe0d77d3c75e0523b45731cf45d1ec1c4d435f4c"
-const JWT_EXPIRATION_TIME = "1800s"
+const JWT_EXPIRATION_TIME = "3d"
 const jwt = require('jsonwebtoken')
 
 // JWT ADMIN 1 Day Expired
@@ -151,7 +151,6 @@ mongoose.connect(
 )
 
 const database = mongoose.connection
-
 database.on('error', (error) => {
   console.log(error)
 })
@@ -166,7 +165,6 @@ var router = express.Router()
 // Routes
 const admin = require('./router/admin')
 const movie = require('./router/movie')
-const upload = require('./router/upload')
 const user = require('./router/user')
 
 const http = require('http').createServer(app);
@@ -177,7 +175,6 @@ const io = require('socket.io')(http, {
 })
 
 const Roomdata = []
-
 var GlobaluserCount = []
 var Room = []
 
