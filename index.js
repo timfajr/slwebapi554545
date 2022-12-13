@@ -286,8 +286,6 @@ io.on('connection', (socket) => {
     ++GlobaluserCount
     io.to(deviceid).emit("user" , parseInt(99999*Math.random()) + "Is Connected");
     console.log("User Connected " + GlobaluserCount);
-    console.log(Room)
-    console.log(Roomdata)
     
     // Disconnected Event
     socket.on('disconnect', () => {
@@ -316,7 +314,6 @@ io.on('connection', (socket) => {
           const obj = data;
           const roomid = obj.roomid
           const videotime = obj.videotime
-          console.log(videotime)
           const value = Roomdata.some(elem => elem.roomid === roomid )
           if( value )
           {
@@ -336,8 +333,6 @@ io.on('connection', (socket) => {
           const obj = data;
           const roomid = obj.roomid
           const host = obj.host
-          console.log(roomid)
-          console.log(host)
 
           const value = Roomdata.some(elem => elem.roomid === roomid )
           if( value )

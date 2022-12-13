@@ -93,7 +93,7 @@ router.post('/login', async (request, response) => {
             const options = { new: true }
             const userdata = await Device.findOneAndUpdate({ deviceid : {$regex: request.body.deviceid}}, updatedData , options )
     
-            response.status(200).json({ message: "success", access_token: accessToken , refresh_token: refreshToken })
+            response.status(200).json({ message: "success", access_token: accessToken , refresh_token: refreshToken , key: devicedata.secret })
         } else {
             response.status(400).json({ message: "failure" })
         }
