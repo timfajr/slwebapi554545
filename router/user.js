@@ -47,13 +47,13 @@ router.use(express.json())
 
 // Need Rework
 router.post('/login', async (request, response) => {
-    const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
+    const data1 = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
     const devicedata = await Device.findOne({ 'devices.deviceid' : { $regex: request.body.deviceid } })
-    if ( data && devicedata ){
-        if ( data.ownerid  ==  request.body.ownerid ) {
+    if ( data1 && devicedata ){
+        if ( data1.ownerid  ==  request.body.ownerid ) {
 
             // Checking subcription time
-            var date30 = new Date(data.expires)
+            var date30 = new Date(data1.expires)
             var setday = date30.setDate(date30.getDate() + 30)
             var updateday = new Date(setday)
             const timeDifference = updateday.getTime() - datenow.getTime()
@@ -85,9 +85,9 @@ router.post('/login', async (request, response) => {
             }
             
             // generate an access token //
-    const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
-            const accessToken = generateAccessToken({ deviceid: request.body.deviceid , ownerid : request.body.ownerid, timeleft: data.timeleft })
-            const refreshToken = jwt.sign({ deviceid: request.body.deviceid , ownerid : request.body.ownerid, timeleft: data.timeleft }, refreshTokenSecret)
+            const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
+            const accessToken = generateAccessToken({ deviceid: request.body.deviceid , ownerid : request.body.ownerid, timeleft: data1.timeleft })
+            const refreshToken = jwt.sign({ deviceid: request.body.deviceid , ownerid : request.body.ownerid, timeleft: data1.timeleft }, refreshTokenSecret)
     
             // Push to database here //
             const updatedData = { $set: {refresh_token: refreshToken} }
