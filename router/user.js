@@ -77,7 +77,7 @@ router.post('/login', async (request, response) => {
                     $set: 
                     {
                         'subscription' : "active",
-                        'timeleft' : Math.ceil( timeDifference / daysinms)
+                        'timeleft' : Math.ceil( timeDifference / daysinms )
                     }
                 }
                 const options = { new: false }
@@ -85,8 +85,9 @@ router.post('/login', async (request, response) => {
             }
             
             // generate an access token //
-            const accessToken = generateAccessToken({ deviceid: request.body.deviceid , ownerid : request.body.ownerid })
-            const refreshToken = jwt.sign({ deviceid: request.body.deviceid , ownerid : request.body.ownerid }, refreshTokenSecret)
+    const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
+            const accessToken = generateAccessToken({ deviceid: request.body.deviceid , ownerid : request.body.ownerid, timeleft: data.timeleft })
+            const refreshToken = jwt.sign({ deviceid: request.body.deviceid , ownerid : request.body.ownerid, timeleft: data.timeleft }, refreshTokenSecret)
     
             // Push to database here //
             const updatedData = { $set: {refresh_token: refreshToken} }
@@ -172,7 +173,7 @@ router.post('/register', async (request, response) => {
 
 router.post('/inworld/30daysub', async (request, response) => {
     const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
-    const itemprice = 300
+    const itemprice = 400
     const qty = request.body.qty || 1
     if (request.body.secret == data.secret){
         try {
@@ -210,7 +211,6 @@ router.post('/inworld/30daysub', async (request, response) => {
             const options = { new: false }
             const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
             const result = await Device.findOne({ ownerid : {$regex: request.body.ownerid}})
-            
             try {
                 const transaction = new Transaction({
                     ownerid: request.body.ownerid,
@@ -259,7 +259,7 @@ router.post('/inworld/30daysub', async (request, response) => {
 // Need To check User not found
 router.post('/30daysub', async (request, response) => {
     const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
-    const itemprice = 300
+    const itemprice = 400
     const qty = request.body.qty || 1
     if ( data.balance >= itemprice ){
     try {
