@@ -53,8 +53,8 @@ router.post('/login', async (request, response) => {
         if ( data1.ownerid  ==  request.body.ownerid ) {
 
             // Checking subcription time
-            var date30 = new Date(data1.expires)
-            var setday = date30.setDate(date30.getDate() + 30)
+            var dateex = new Date(data1.expires)
+            var setday = dateex .setDate(dateex.getDate())
             var updateday = new Date(setday)
             const timeDifference = updateday.getTime() - datenow.getTime()
 
@@ -72,7 +72,7 @@ router.post('/login', async (request, response) => {
             }
 
             // Save Subcription Data
-            if ( timeDifference > 0 ) {
+            if ( timeDifference >= 1 ) {
                 const updatedData = { 
                     $set: 
                     {
@@ -85,16 +85,16 @@ router.post('/login', async (request, response) => {
             }
             
             // generate an access token //
-            const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
-            const accessToken = generateAccessToken({ deviceid: request.body.deviceid , ownerid : request.body.ownerid, timeleft: data1.timeleft })
-            const refreshToken = jwt.sign({ deviceid: request.body.deviceid , ownerid : request.body.ownerid, timeleft: data1.timeleft }, refreshTokenSecret)
+            const data2 = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
+            const accessToken = generateAccessToken({ deviceid: request.body.deviceid , ownerid : request.body.ownerid, timeleft: data2.timeleft })
+            const refreshToken = jwt.sign({ deviceid: request.body.deviceid , ownerid : request.body.ownerid, timeleft: data2.timeleft }, refreshTokenSecret)
     
             // Push to database here //
             const updatedData = { $set: {refresh_token: refreshToken} }
             const options = { new: true }
             const userdata = await Device.findOneAndUpdate({ deviceid : {$regex: request.body.deviceid}}, updatedData , options )
     
-            response.status(200).json({ message: "success", access_token: accessToken , refresh_token: refreshToken , key: devicedata.secret })
+            response.status(200).json({ message: "success", access_token: accessToken , refresh_token: refreshToken , key: devicedata.secret , timeleft: data2.timeleft  })
         } else {
             response.status(400).json({ message: "failure" })
         }
@@ -173,7 +173,7 @@ router.post('/register', async (request, response) => {
 
 router.post('/inworld/30daysub', async (request, response) => {
     const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
-    const itemprice = 400
+    const itemprice =  700
     const qty = request.body.qty || 1
     if (request.body.secret == data.secret){
         try {
@@ -259,7 +259,7 @@ router.post('/inworld/30daysub', async (request, response) => {
 // Need To check User not found
 router.post('/30daysub', async (request, response) => {
     const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
-    const itemprice = 400
+    const itemprice = 700
     const qty = request.body.qty || 1
     if ( data.balance >= itemprice ){
     try {
