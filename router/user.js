@@ -35,7 +35,7 @@ const authenticateJWT = (req, res, next) => {
 var now = new Date
 var utc_timestamp = Date(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate(),now.getUTCHours())
 
-var setday30 = now.setDate(now.getDate() + 7 ) // 7 Day For New User
+var setday30 = now.setDate(now.getDate() + 6 ) // 7 Day For New User
 var date30 = new Date(setday30)
 var datenow = new Date(utc_timestamp)
 
