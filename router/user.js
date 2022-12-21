@@ -35,7 +35,7 @@ const authenticateJWT = (req, res, next) => {
 var now = new Date
 var utc_timestamp = Date(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate(),now.getUTCHours())
 
-var setday30 = now.setDate(now.getDate() + 30)
+var setday30 = now.setDate(now.getDate() + 7 ) // 7 Day For New User
 var date30 = new Date(setday30)
 var datenow = new Date(utc_timestamp)
 
@@ -192,8 +192,7 @@ router.post('/inworld/30daysub', async (request, response) => {
                     {
                         'subscription' : "active",
                         'expires' : setday,
-                        'timeleft' : Math.ceil( timeDifference / daysinms),
-                        'balance' : data.balance - itemprice
+                        'timeleft' : Math.ceil( timeDifference / daysinms)
                     }
                 }
             }
@@ -203,8 +202,7 @@ router.post('/inworld/30daysub', async (request, response) => {
                     {
                         'subscription' : "active",
                         'expires' : setday,
-                        'timeleft' : Math.ceil( timeDifference / daysinms) ,
-                        'balance' : data.balance - itemprice
+                        'timeleft' : Math.ceil( timeDifference / daysinms)
                     }
                 }
             }
