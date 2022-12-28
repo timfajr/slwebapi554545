@@ -137,7 +137,7 @@ router.get('/getdevices', authenticateJWT, async (req, res) => {
     try {
         
       // execute query with page and limit values
-      const devices = await Device.find({},{__v:0 , created_at:0, activeregion:0 , access_token:0 ,refresh_token:0 })
+      const devices = await Device.find({},{__v:0, activeregion:0 , access_token:0 ,refresh_token:0 })
         .limit(limit * 1)
         .skip((page - 1) * limit)
         .sort(sortBy)
