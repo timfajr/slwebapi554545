@@ -178,11 +178,10 @@ router.post('/inworld/30daysub', async (request, response) => {
     if (request.body.secret == data.secret){
         try {
             var date30 = new Date(data.expires)
-            var setday = date30.setDate(date30.getDate() + 30)
+            var setday = date30.setDate(date30.getDate() + ( 30 * qty ) )
             var updateday = new Date(setday)
             const timeDifference = updateday.getTime() - datenow.getTime()
             if ( timeDifference <= 0 ){
-                console.log('hit')
                 var date30 = new Date(datenow)
                 var setday = date30.setDate(date30.getDate() + ( 30 * qty ) )
                 var updateday = new Date(setday)
@@ -208,7 +207,6 @@ router.post('/inworld/30daysub', async (request, response) => {
             }
             const options = { new: false }
             const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
-            const result = await Device.findOne({ ownerid : {$regex: request.body.ownerid}})
             try {
                 const transaction = new Transaction({
                     ownerid: request.body.ownerid,
@@ -236,6 +234,7 @@ router.post('/inworld/30daysub', async (request, response) => {
                 const options = { new: true }
                 const transactiondone = await transaction.save()
                 const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
+                const result = await Device.findOne({ ownerid : {$regex: request.body.ownerid}})
                 response.status(200).json({ message: 'success', ownerid: request.body.ownerid , item : 'subs30' , ammount: "L$ "+ transactiondone.total , timeleft: result.timeleft +" Day", created_at: new Date(transactiondone.created_at).toISOString().replace(/T/, ' ').replace(/\..+/, '') })
             }
             catch(error){
