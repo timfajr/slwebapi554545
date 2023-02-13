@@ -135,7 +135,7 @@ const imageupload = multer({
 const mongoose = require('mongoose')
 
 mongoose.connect(
-  'mongodb://dataAdmin:AdminXx@bluebox.wesbite/api_test_db',
+  'mongodb://dataAdmin:AdminXx@bluebox.website/api_test_db',
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
