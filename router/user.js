@@ -207,13 +207,30 @@ router.post('/inworld/30daysub', async (request, response) => {
             }
             const options = { new: false }
             const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
+            var dataitem = "subs_" + (30 * qty) +"_day"
+            var totalprice = 700
+            if (qty == 3)
+            {
+                totalprice = 2000
+            }
+            else if (qty == 6)
+            {
+                totalprice = 3800
+            }
+            else if (qty == 12)
+            {
+                totalprice = 7500
+            }
+            else {
+                totalprice = itemprice * qty
+            }
             try {
                 const transaction = new Transaction({
                     ownerid: request.body.ownerid,
-                    item: 'subs30',
+                    item: dataitem,
                     quantity: qty,
                     price: itemprice,
-                    total: itemprice * qty,
+                    total: totalprice,
                     gift: false,
                     gift_ownerid: ''
                 })
@@ -222,10 +239,10 @@ router.post('/inworld/30daysub', async (request, response) => {
                     {
                         'transaction' : [{
                             ownerid: request.body.ownerid,
-                            item: 'subs30',
+                            item: dataitem,
                             quantity: qty,
                             price: itemprice,
-                            total: itemprice * qty,
+                            total: totalprice,
                             gift: false,
                             gift_ownerid: ''
                         }]
@@ -235,7 +252,7 @@ router.post('/inworld/30daysub', async (request, response) => {
                 const transactiondone = await transaction.save()
                 const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
                 const result = await Device.findOne({ ownerid : {$regex: request.body.ownerid}})
-                response.status(200).json({ message: 'success', ownerid: request.body.ownerid , item : 'subs30' , ammount: "L$ "+ transactiondone.total , timeleft: result.timeleft +" Day", created_at: new Date(transactiondone.created_at).toISOString().replace(/T/, ' ').replace(/\..+/, '') })
+                response.status(200).json({ message: 'success', ownerid: request.body.ownerid , item : dataitem , ammount: "L$ "+ transactiondone.total , timeleft: result.timeleft +" Day", created_at: new Date(transactiondone.created_at).toISOString().replace(/T/, ' ').replace(/\..+/, '') })
             }
             catch(error){
                 response.status(500).json({ message: error.message })
