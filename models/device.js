@@ -6,6 +6,10 @@ const DeviceSchema = new mongoose.Schema({
         type: String
     },
 
+    username: {
+        type: String
+    },
+
     // API Generated
     subscription: {
         type: String

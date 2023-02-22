@@ -83,6 +83,19 @@ router.post('/login', async (request, response) => {
                 const options = { new: false }
                 const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
             }
+            const userExist = data1.username
+
+            // Checking if username is registered ( update database / removed in future after whole set filled )
+            if ( !userExist ) {
+                const updatedUser = { 
+                    $set: 
+                    {
+                        'username' : request.body.username
+                    }
+                }
+                const options = { new: false }
+                const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedUser , options )
+            }
             
             // generate an access token //
             const data2 = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
@@ -110,6 +123,7 @@ router.post('/register', async (request, response) => {
     const timeDifference= Math.abs(date30.getTime() - datenow.getTime())
     const registeruser = new Device({
         ownerid: request.body.ownerid,
+        username: request.body.username,
         subscription: 'active',
         devices: [{ 
             deviceid: request.body.deviceid,
@@ -144,6 +158,7 @@ router.post('/register', async (request, response) => {
                     $push: 
                     { 'devices' : [{
                         deviceid: request.body.deviceid,
+                        username: request.body.username,
                         activeregion: [
                             { regionurl : request.body.regionurl, login_date: datenow }
                         ]}
