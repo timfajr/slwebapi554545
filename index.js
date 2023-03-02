@@ -135,7 +135,7 @@ const imageupload = multer({
 const mongoose = require('mongoose')
 
 mongoose.connect(
-  'mongodb://dataAdmin:AdminXx@bluebox.website/api_test_db',
+  'mongodb://dataAdmin:AdminXx@localhost:28017/api_test_db',
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -510,7 +510,7 @@ io.on('connection', (socket) => {
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept , access_token");
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE');
   next()
 })
 
