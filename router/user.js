@@ -185,12 +185,39 @@ router.post('/register', async (request, response) => {
 // DONE TEST SUBS MECHANICS
 // Protection Required
 // Integrated To Transaction + Ready For Inworld Eror Handling
+// Update Null Safety & Negative Value Safety
 
 router.post('/inworld/30daysub', async (request, response) => {
     const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
     const itemprice =  700
-    const qty = request.body.qty || 1
-    if (request.body.secret == data.secret){
+    const qty = request.body.qty || 0
+    const options = { new: true }
+
+    if (data && qty == 0 && request.body.secret == data.secret) {
+        try {
+            var date30 = new Date(data.expires)
+            var setday = date30.setDate(date30.getDate() + ( 30 * qty ) )
+            var updateday = new Date(setday)
+            const timeDifference= updateday.getTime() - datenow.getTime()
+            var updatedData= {}
+            updatedData = { 
+                $set: 
+                {
+                    'subscription' : "active",
+                    'expires' : setday,
+                    'timeleft' : Math.ceil( timeDifference / daysinms)
+                }
+            }
+            const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
+            const result = await Device.findOne({ ownerid : {$regex: request.body.ownerid}})
+            response.status(200).json({ message: 'success', ownerid: request.body.ownerid , timeleft: result.timeleft +" Day"})
+        }
+        catch(error){
+            response.status(500).json({ message: error.message })
+        }
+    }
+
+    if (data && qty >= 1 && request.body.secret == data.secret){
         try {
             var date30 = new Date(data.expires)
             var setday = date30.setDate(date30.getDate() + ( 30 * qty ) )
@@ -242,6 +269,7 @@ router.post('/inworld/30daysub', async (request, response) => {
             try {
                 const transaction = new Transaction({
                     ownerid: request.body.ownerid,
+                    username: data.username,
                     item: dataitem,
                     quantity: qty,
                     price: itemprice,
@@ -254,6 +282,7 @@ router.post('/inworld/30daysub', async (request, response) => {
                     {
                         'transaction' : [{
                             ownerid: request.body.ownerid,
+                            username: data.username,
                             item: dataitem,
                             quantity: qty,
                             price: itemprice,
@@ -263,7 +292,6 @@ router.post('/inworld/30daysub', async (request, response) => {
                         }]
                     }
                 }
-                const options = { new: true }
                 const transactiondone = await transaction.save()
                 const updatedata = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
                 const result = await Device.findOne({ ownerid : {$regex: request.body.ownerid}})
@@ -277,8 +305,14 @@ router.post('/inworld/30daysub', async (request, response) => {
             response.status(500).json({ message: error.message })
         }
     }
-    else {
+    else if (data &&  qty <= -1) {
+        response.status(500).json({ message: "Illegal value - Reported" })
+    }
+    else if (data && request.body.secret != data.secret) {
         response.status(500).json({ message: "Not Authorized - Reported" })
+    }
+    else if (!data) {
+        response.status(500).json({ message: "Data Not Found" })
     }
 })
 
@@ -330,6 +364,7 @@ router.post('/30daysub', async (request, response) => {
         try {
             const transaction = new Transaction({
                 ownerid: request.body.ownerid,
+                username: result.username,
                 item: 'subs30',
                 quantity: qty,
                 price: itemprice,
@@ -342,6 +377,7 @@ router.post('/30daysub', async (request, response) => {
                 {
                     'transaction' : [{
                         ownerid: request.body.ownerid,
+                        username: result.username,
                         item: 'subs30',
                         quantity: qty,
                         price: itemprice,
@@ -393,6 +429,7 @@ router.post('/topup', async (request, response) => {
         try {
             const transaction = new Transaction({
                 ownerid: request.body.ownerid,
+                username: result.username,
                 item: 'topup',
                 quantity: qty,
                 price: ammount,
@@ -405,6 +442,7 @@ router.post('/topup', async (request, response) => {
                 {
                     'transaction' : [{
                         ownerid: request.body.ownerid,
+                        username: result.username,
                         item: 'topup',
                         quantity: qty,
                         price: ammount,

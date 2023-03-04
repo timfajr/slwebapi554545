@@ -5,6 +5,10 @@ const Moviedata = require('../models/moviedata')
 const Device = require('../models/device')
 const Transaction = require('../models/transaction')
 
+const { UploadFile } = require("../models/upload")
+const { UploadImage } = require("../models/upload_image")
+const fs = require('fs');
+
 const bcrypt = require("bcrypt")
 module.exports = router
 const Secretkey = "Secret777"
@@ -246,9 +250,31 @@ router.patch('/update/', authenticateJWT, async (req, res) => {
 //Delete by ID Method
 router.delete('/delete/', authenticateJWT, async (req, res) => {
     try {
+
+        // Database Delete
         const { id= "" } = req.query;
+        const search = await Moviedata.findOne( { _id : id } ,{__v:0 , created_at:0, topick:0 })
+        const videourl = search.url
+        const imgurl = search.imgurl
+        const pathimage = imgurl.replace("https://api.bluebox.website/","");
+        const pathvideo = videourl.replace("https://api.bluebox.website/","");
+
         const data = await Moviedata.findByIdAndDelete(id)
-        res.status(200).json({ message: `Document with ${data.title} has been deleted..`})
+        const image = await UploadFile.findOneAndDelete({ url : search.url })
+        const movie = await UploadImage.findOneAndDelete({ url : search.imgurl })
+
+        // File Delete
+        fs.unlink(pathimage, (err => {
+            if (err)  res.status(400).json(err);
+            else {
+                fs.unlink(pathvideo, (err => {
+                    if (err)  res.status(400).json(err);
+                    else {
+                        res.status(200).json({ message: `Document with ${search.title} has been deleted..`})
+                      }
+                }))
+              }
+        }))
     }
     catch (error) {
         res.status(400).json({ message: error.message })
@@ -257,4 +283,21 @@ router.delete('/delete/', authenticateJWT, async (req, res) => {
 
 router.post('/token', authenticateJWT , async (req, res) => {
     res.status(200).json({ message: "success"})
+})
+
+// User Update
+
+//Delete by ID Method
+
+//Update by ID Method
+
+router.delete('/user/delete/', authenticateJWT, async (req, res) => {
+  try {
+      const { id= "" } = req.query;
+      const search = await Device.findByIdAndDelete( { _id : id } ,{__v:0 , created_at:0, topick:0 });
+      res.status(200).json({ message: `document with ${id} has been deleted ` });
+  }
+  catch (error) {
+      res.status(400).json({ message: error.message })
+  }
 })

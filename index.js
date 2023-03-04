@@ -112,6 +112,7 @@ const imageFilter = (req, file, cb) => {
     'image/x-citrix-jpeg': 'jpg',
     'image/jp2': 'jpg2',
     'image/x-png': 'png',
+    'image/png': 'png',
     'image/jpeg': 'jpg'
  }
   if (MIME_TYPE_MAP[file.mimetype]) {

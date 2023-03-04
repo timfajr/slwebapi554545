@@ -7,6 +7,9 @@ const TransactionSchema = new mongoose.Schema({
     item: {
         type: String
     },
+    username: {
+        type: String
+    },
     quantity: {
         type: Number
     },
