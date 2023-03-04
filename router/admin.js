@@ -4,6 +4,7 @@ const Admin = require('../models/admin')
 const Moviedata = require('../models/moviedata')
 const Device = require('../models/device')
 const Transaction = require('../models/transaction')
+const Requestmovie = require('../models/requestmovie')
 
 const { UploadFile } = require("../models/upload")
 const { UploadImage } = require("../models/upload_image")
@@ -232,6 +233,49 @@ router.get('/getAll', authenticateJWT , async (req, res) => {
     }
 });
 
+// Pagination movie table
+router.get('/getrequested', authenticateJWT , async (req, res) => {
+  
+  // destructure page and limit and set default values
+  const { page = 1, limit = 12 , sortBy = "-created_at"} = req.query;
+  try {
+      
+    // execute query with page and limit values
+    const data = await Requestmovie.find({},{__v:0})
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .sort(sortBy)
+      .exec();
+
+    // get total documents in the Posts collection 
+    const count = await Requestmovie.countDocuments();
+
+    // return response with posts, total pages, and current page
+    res.json({
+      data : data,
+      totalPages: Math.ceil(count / limit),
+      totalitem: count,
+      pageitem: limit ,
+      currentPage: page
+    });
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+//Update by ID Method
+router.patch('/updaterequest/', authenticateJWT, async (req, res) => {
+  try {
+      const { id= "" } = req.query;
+      const updatedData = req.body
+      const options = { new: false }
+      const result = await Requestmovie.findByIdAndUpdate(id, updatedData, options)
+      res.status(200).json({ message: `document ${result.id} has been updated ` })
+  }
+  catch (error) {
+      res.status(400).json({ message: error.message })
+  }
+})
 
 //Update by ID Method
 router.patch('/update/', authenticateJWT, async (req, res) => {
@@ -240,11 +284,25 @@ router.patch('/update/', authenticateJWT, async (req, res) => {
         const updatedData = req.body
         const options = { new: false }
         const result = await Moviedata.findByIdAndUpdate(id, updatedData, options)
-        res.status(200).json({ message: `document with ${result.title} has been updated ` })
+        res.status(200).json({ message: `document ${result.title} has been updated ` })
     }
     catch (error) {
         res.status(400).json({ message: error.message })
     }
+})
+
+//Delete by ID Method
+router.delete('/deleterequested/', authenticateJWT, async (req, res) => {
+  try {
+
+      // Database Delete
+      const { id= "" } = req.query;
+      const data = await Requestmovie.findByIdAndDelete(id)
+      res.status(200).json({ message: `Document ${ id } has been deleted..`})
+  }
+  catch (error) {
+      res.status(400).json({ message: error.message })
+  }
 })
 
 //Delete by ID Method

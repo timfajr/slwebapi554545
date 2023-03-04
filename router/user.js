@@ -487,11 +487,14 @@ router.post('/requestmovie', async (request, response) => {
     try{
         const data = new Requestmovie({
             ownerid: request.body.ownerid,
+            username: request.body.username,
             requestedmovie: request.body.requestedmovie,
-            message: request.body.message
+            movieyear: request.body.movieyear,
+            message: request.body.message,
+            status: "pending"
         })
-        const transactiondone = await data.save()
-        response.json(transactiondone)
+        const requestdone = await data.save()
+        response.json(requestdone)
     }
     catch(error){
         response.status(500).json({ message: error.message })
