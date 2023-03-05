@@ -61,7 +61,7 @@ router.get('/getAll', authenticateJWT , async (req, res) => {
 // Pagination movie table
 router.get('/getTop', authenticateJWT , async (req, res) => {
   // destructure page and limit and set default values
-  const { page = 1, limit = 10 , sortBy = "-created_at" } = req.query;
+  const { page = 1, limit = 50 , sortBy = "-created_at" } = req.query;
   try {
     const query1 = { topick : true }
     // execute query with page and limit values
