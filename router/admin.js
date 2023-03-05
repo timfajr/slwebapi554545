@@ -284,6 +284,17 @@ router.patch('/update/', authenticateJWT, async (req, res) => {
         const updatedData = req.body
         const options = { new: false }
         const result = await Moviedata.findByIdAndUpdate(id, updatedData, options)
+        const ownerid = result.ownerid
+        const uuid = result.uid
+        const updatedDatauser = { 
+          "$pull": 
+          {
+              "requestedmovie" : {
+                "uid": uuid
+              }
+          }
+      }
+        const find = await Device.findOneAndUpdate( {"ownerid": ownerid} , updatedDatauser)
         res.status(200).json({ message: `document ${result.title} has been updated ` })
     }
     catch (error) {
