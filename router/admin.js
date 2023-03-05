@@ -263,14 +263,14 @@ router.get('/getrequested', authenticateJWT , async (req, res) => {
   }
 });
 
-//Update by ID Method
-router.patch('/updaterequest/', authenticateJWT, async (req, res) => {
+//Update Movie by ID Method
+router.patch('/update/', authenticateJWT, async (req, res) => {
   try {
       const { id= "" } = req.query;
       const updatedData = req.body
       const options = { new: false }
-      const result = await Requestmovie.findByIdAndUpdate(id, updatedData, options)
-      res.status(200).json({ message: `document ${result.id} has been updated ` })
+      const result = await Moviedata.findByIdAndUpdate(id, updatedData, options)
+      res.status(200).json({ message: `document ${result.title} has been updated ` })
   }
   catch (error) {
       res.status(400).json({ message: error.message })
@@ -278,28 +278,34 @@ router.patch('/updaterequest/', authenticateJWT, async (req, res) => {
 })
 
 //Update by ID Method
-router.patch('/update/', authenticateJWT, async (req, res) => {
-    try {
-        const { id= "" } = req.query;
-        const updatedData = req.body
-        const options = { new: false }
-        const result = await Moviedata.findByIdAndUpdate(id, updatedData, options)
-        const ownerid = result.ownerid
-        const uuid = result.uid
-        const updatedDatauser = { 
-          "$pull": 
-          {
-              "requestedmovie" : {
-                "uid": uuid
-              }
-          }
-      }
-        const find = await Device.findOneAndUpdate( {"ownerid": ownerid} , updatedDatauser)
-        res.status(200).json({ message: `document ${result.title} has been updated ` })
+router.patch('/updaterequest/', async (req, res) => {
+  try {
+      const { id= "" } = req.query;
+      const updatedData = req.body
+      const options = { new: false }
+      const result = await Requestmovie.findByIdAndUpdate(id, updatedData, options)
+      const ownerid = result.ownerid
+      const uuid = result.uid
+      const updatedDatauser = { 
+        "$set": 
+        {
+              "requestedmovie.$.ownerid": result.ownerid,
+              "requestedmovie.$.username" : result.username,
+              "requestedmovie.$.uid" : result.uid,
+              "requestedmovie.$.requestedmovie" : result.requestedmovie,
+              "requestedmovie.$.movieyear": result.movieyear,
+              "requestedmovie.$.reply": req.body.reply,
+              "requestedmovie.$.status": req.body.status,
+              "requestedmovie.$.message": result.message,
+              "requestedmovie.$.created_at": result.created_at
+        }
     }
-    catch (error) {
-        res.status(400).json({ message: error.message })
-    }
+      const find = await Device.findOneAndUpdate( {"ownerid": ownerid , "requestedmovie.uid" : uuid}  , updatedDatauser)
+      res.status(200).json({ message: `document ${result.title} has been updated ` })
+  }
+  catch (error) {
+      res.status(400).json({ message: error.message })
+  }
 })
 
 //Delete by ID Method
