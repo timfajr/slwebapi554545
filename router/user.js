@@ -483,16 +483,36 @@ router.get('/token', async (request, response) => {
         }
 })
 
-router.post('/requestmovie', async (request, response) => {
+router.post('/requestmovie',  async (request, response) => {
     try{
+        const uuid = Date.now().toString(36)
         const data = new Requestmovie({
             ownerid: request.body.ownerid,
             username: request.body.username,
             requestedmovie: request.body.requestedmovie,
             movieyear: request.body.movieyear,
             message: request.body.message,
-            status: "pending"
+            status: "pending",
+            reply: "",
+            uid: uuid
         })
+        const updatedData = { 
+            $push: 
+            {
+                'requestedmovie' : [{
+                    ownerid: request.body.ownerid,
+                    username: request.body.username,
+                    requestedmovie: request.body.requestedmovie,
+                    movieyear: request.body.movieyear,
+                    message: request.body.message,
+                    status: "pending",
+                    uid: uuid,
+                    reply: "",
+                }]
+            }
+        }
+        const options = { new: true }
+        const updatedatax = await Device.findOneAndUpdate({ ownerid : {$regex: request.body.ownerid}}, updatedData , options )
         const requestdone = await data.save()
         response.json(requestdone)
     }
@@ -501,15 +521,27 @@ router.post('/requestmovie', async (request, response) => {
     }
 })
 
-router.get('/requestmovie', async (request, response) => {
-    try{
-        const userdata = await Requestmovie.find({},{__v:0 , _id:0})
-        response.json(userdata)
+//Delete by ID Method
+router.delete('/deleterequested/', async (req, res) => {
+    try {
+        // Database Delete
+        const { uid = "" , ownerid = "" } = req.query;
+        const updatedData = { 
+          "$pull": 
+          {
+              "requestedmovie" : {
+                "uid": uid
+              }
+          }
+        }
+        const find = await Device.findOneAndUpdate( {"ownerid": ownerid} , updatedData)
+        const data = await Requestmovie.findOneAndDelete({"uid": uid })
+        res.status(200).json({ message: `Document ${ uid } has been deleted.. on user ${ ownerid }`})
     }
-    catch(error){
-        response.status(500).json({ message: error.message })
+    catch (error) {
+        res.status(400).json({ message: error.message })
     }
-})
+  })
 
 router.get('/me', authenticateJWT, async (request, response) => { 
     const decoded = jwt.verify(request.headers.access_token, JWT_SECRET)

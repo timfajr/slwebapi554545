@@ -29,6 +29,37 @@ const DeviceSchema = new mongoose.Schema({
         }],
     }],
 
+    requestedmovie: [{
+        ownerid: {
+            type: String
+        },
+        username: {
+            type: String
+        },
+        requestedmovie: {
+            type: String
+        },
+        movieyear: {
+            type: String
+        },
+        message: {
+            type: String
+        },
+        reply: {
+            type: String
+        },
+        status: {
+            type: String
+        },
+        uid: {
+            type: String
+        },
+        created_at: {
+            type: Date,
+            default: Date.now,
+        }
+    }],
+
     transaction: [{
         ownerid: {
             type : String

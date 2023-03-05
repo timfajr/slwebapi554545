@@ -294,11 +294,21 @@ router.patch('/update/', authenticateJWT, async (req, res) => {
 //Delete by ID Method
 router.delete('/deleterequested/', authenticateJWT, async (req, res) => {
   try {
-
       // Database Delete
       const { id= "" } = req.query;
       const data = await Requestmovie.findByIdAndDelete(id)
-      res.status(200).json({ message: `Document ${ id } has been deleted..`})
+      const ownerid = data.ownerid
+      const uuid = data.uid
+      const updatedData = { 
+        "$pull": 
+        {
+            "requestedmovie" : {
+              "uid": uuid
+            }
+        }
+    }
+      const find = await Device.findOneAndUpdate( {"ownerid": ownerid} , updatedData)
+      res.status(200).json({ message: `Document ${ uuid } has been deleted..`})
   }
   catch (error) {
       res.status(400).json({ message: error.message })

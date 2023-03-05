@@ -7,6 +7,9 @@ const RequestmovieSchema = new mongoose.Schema({
     username: {
         type: String
     },
+    uid: {
+        type: String
+    },
     requestedmovie: {
         type: String
     },
@@ -14,6 +17,9 @@ const RequestmovieSchema = new mongoose.Schema({
         type: String
     },
     message: {
+        type: String
+    },
+    reply: {
         type: String
     },
     status: {
