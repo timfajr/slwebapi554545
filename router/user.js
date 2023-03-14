@@ -18,7 +18,6 @@ function generateAccessToken( device ) {
 
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers.access_token
-    console.log(authHeader)
     if (authHeader) {
         const token = authHeader
         jwt.verify(token, JWT_SECRET, (err, decoded) => {
@@ -332,7 +331,6 @@ router.post('/30daysub', async (request, response) => {
         const timeDifference= updateday.getTime() - datenow.getTime()
         var updatedData= {}
         if ( timeDifference <= 0 ){
-            console.log('hit')
             var date30 = new Date(datenow)
             var setday = date30.setDate(date30.getDate() + ( 30 * qty ) )
             var updateday = new Date(setday)
@@ -410,7 +408,6 @@ router.post('/30daysub', async (request, response) => {
 router.post('/topup', async (request, response) => {
     const data = await Device.findOne( { ownerid : { $regex: request.body.ownerid }} )
     const ammount = request.body.ammount
-    console.log(data)
     const qty = 1
     if ( data && ammount && data.secret == request.body.secret ) {
     try {
@@ -555,7 +552,6 @@ router.get('/me', authenticateJWT, async (request, response) => {
                     { $sort: { 'transaction.created_at': -1 }},
                     { $group: { _id: '$_id', transaction: { $push: '$transaction'}}}])
                 if( transaction.length !== 0 ){
-                        console.log('hit')
                         var total = 0;
                         for (i in transaction[0].transaction) {
                             total += transaction[0].transaction[i].total;

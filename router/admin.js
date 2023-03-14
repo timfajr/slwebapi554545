@@ -6,6 +6,9 @@ const Device = require('../models/device')
 const Transaction = require('../models/transaction')
 const Requestmovie = require('../models/requestmovie')
 
+const Tvseriestitledata = require('../models/tvseriescategory')
+const Tvseriesdata = require('../models/tvseries')
+
 const { UploadFile } = require("../models/upload")
 const { UploadImage } = require("../models/upload_image")
 const fs = require('fs');
@@ -32,6 +35,9 @@ const JWT_SECRET = "810e447e4d33bb42a4378b0fbe0d77d2c75e0523b45731cf45d1ec1c4d43
 const refreshTokenSecret = "920e447e4d33bb42a4378b0fbe0d77d3c75e0523b45731cf45d1ec1c4d435f4c"
 const JWT_EXPIRATION_TIME = "1d"
 const jwt = require('jsonwebtoken')
+const { UploadSeriesImage } = require('../models/upload_seriesimage')
+const { UploadSeriesFile } = require('../models/upload_seriesfile')
+const { title } = require('process')
 
 // Token 
 function generateAccessToken( user ) {
@@ -134,6 +140,119 @@ router.post('/post/movie', authenticateJWT , async (req, res) => {
         res.status(400).json({message: error.message})
     }
 })
+
+
+router.post('/post/tvseriescategory', authenticateJWT , async (req, res) => {
+
+  const data = new Tvseriestitledata({
+      title: req.body.title,
+      description: req.body.description,
+      genre: req.body.genre,
+      topick: req.body.topick,
+      imgurl: req.body.imgurl,
+      identifier: Date.now().toString(36)
+  })
+
+  try {
+      const dataToSave = await data.save()
+      res.status(200).json(dataToSave)
+  }
+
+  catch (error) {
+      res.status(400).json({message: error.message})
+  }
+})
+
+router.post('/post/tvseries', authenticateJWT , async (req, res) => {
+  
+  const titlenew =  req.body.title + " S" + req.body.series + " E" + req.body.episode
+  const data = new Tvseriesdata({
+      title: titlenew,
+      series: req.body.series,
+      episode: req.body.episode,
+      identifier: req.body.identifier,
+      url: req.body.url
+  })
+
+  try {
+      const dataToSave = await data.save()
+      const updatedDatauser = 
+      { 
+        $push: 
+        { 'series' : [{
+          title: titlenew,
+          series: req.body.series,
+          episode: req.body.episode,
+          identifier: req.body.identifier,
+          url: req.body.url
+        }]}
+      }
+      const savedata = await Tvseriestitledata.findOneAndUpdate( {"identifier": req.body.identifier }  , updatedDatauser)
+      res.status(200).json(dataToSave)
+  }
+
+  catch (error) {
+      res.status(400).json({message: error.message})
+  }
+})
+
+// Pagination Series title
+router.get('/gettvseriescategory', authenticateJWT , async (req, res) => {
+  // destructure page and limit and set default values
+  const { page = 1, limit = 1000 , sortBy = "_id"} = req.query;
+  try {
+      
+    // execute query with page and limit values
+    const data = await Tvseriestitledata.find({},{__v:0 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .sort(sortBy)
+      .exec();
+      
+    // get total documents in the Posts collection 
+    const count = await Tvseriestitledata.countDocuments();
+
+    // return response with posts, total pages, and current page
+    res.json({
+      data,
+      totalPages: Math.ceil(count / limit),
+      totalitem: count,
+      pageitem: limit ,
+      currentPage: page
+    });
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+// Pagination Series
+router.get('/gettvseries', authenticateJWT , async (req, res) => {
+  // destructure page and limit and set default values
+  const { page = 1, limit = 10 , sortBy = "_id"} = req.query;
+  try {
+      
+    // execute query with page and limit values
+    const data = await Tvseriesdata.find({},{__v:0 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .sort(sortBy)
+      .exec();
+      
+    // get total documents in the Posts collection 
+    const count = await Tvseriesdata.countDocuments();
+
+    // return response with posts, total pages, and current page
+    res.json({
+      data,
+      totalPages: Math.ceil(count / limit),
+      totalitem: count,
+      pageitem: limit ,
+      currentPage: page
+    });
+  } catch (err) {
+    console.error(err.message);
+  }
+});
 
 // Pagination user table
 router.get('/getdevices', authenticateJWT, async (req, res) => {
@@ -277,6 +396,31 @@ router.patch('/update/', authenticateJWT, async (req, res) => {
   }
 })
 
+//Update Series by ID Method
+router.patch('/updateseries/', authenticateJWT, async (req, res) => {
+  try {
+      const { id= "" } = req.query;
+      const updatedData = req.body
+      const options = { new: false }
+      const result = await Tvseriesdata.findByIdAndUpdate(id, updatedData, options)
+      const updatedDatauser = { 
+        "$set": 
+        {
+              "series.$.title": req.body.title,
+              "series.$.episode" : req.body.episode,
+              "series.$.series" : req.body.series,
+              "series.$.identifier" : result.identifier,
+              "series.$.url" : result.url,
+        }
+      }
+      const find = await Tvseriestitledata.findOneAndUpdate( {"identifier": result.identifier , "series.url" : result.url }  , updatedDatauser)
+      res.status(200).json({ message: `document ${result.title} has been updated ` })
+  }
+  catch (error) {
+      res.status(400).json({ message: error.message })
+  }
+})
+
 //Update by ID Method
 router.patch('/updaterequest/', async (req, res) => {
   try {
@@ -299,7 +443,7 @@ router.patch('/updaterequest/', async (req, res) => {
               "requestedmovie.$.message": result.message,
               "requestedmovie.$.created_at": result.created_at
         }
-    }
+      }
       const find = await Device.findOneAndUpdate( {"ownerid": ownerid , "requestedmovie.uid" : uuid}  , updatedDatauser)
       res.status(200).json({ message: `document ${result.title} has been updated ` })
   }
@@ -307,6 +451,7 @@ router.patch('/updaterequest/', async (req, res) => {
       res.status(400).json({ message: error.message })
   }
 })
+
 
 //Delete by ID Method
 router.delete('/deleterequested/', authenticateJWT, async (req, res) => {
@@ -329,6 +474,73 @@ router.delete('/deleterequested/', authenticateJWT, async (req, res) => {
   }
   catch (error) {
       res.status(400).json({ message: error.message })
+  }
+})
+
+//Delete Series by ID Method
+router.delete('/deleteseries/', authenticateJWT, async (req, res) => {
+  try{
+  // Database Delete
+  const { id= "" } = req.query;
+  const findseriesdata = await Tvseriesdata.findByIdAndDelete(id)
+  const videourl = findseriesdata.url
+  const identifier = findseriesdata.identifier
+  const pathvideo = videourl.replace("https://api.bluebox.website/","");
+  const findimage = await UploadSeriesFile.findOneAndDelete({ "url" : videourl })
+  const updatedData = { 
+    "$pull": 
+    {
+        "series" : {
+          "url": videourl
+        }
+    }
+  }
+  const findandupdate = await Tvseriestitledata.findOneAndUpdate( {"identifier": identifier} , updatedData)
+  fs.unlink(pathvideo, (err => {
+    if (err)  res.status(400).json(err);
+  }))
+  res.status(200).json({ message: `Document ${ identifier } has been deleted..`})
+  }
+  catch (error) {
+    res.status(400).json({ message: error.message })
+  }
+})
+
+//Delete Series Title by ID Method
+router.delete('/deleteseriestitle/', authenticateJWT, async (req, res) => {
+  try {
+    // Database Delete
+    const { id= "" } = req.query;
+    const search = await Tvseriestitledata.findOneAndDelete( { _id : id } ,{__v:0 , created_at:0, topick:0 })
+    const identifier = search.identifier
+    const imgurl = search.imgurl
+    const pathimage = imgurl.replace("https://api.bluebox.website/","");
+    const find = await UploadSeriesImage.findOneAndDelete({ "url" : imgurl })
+
+    // Delete Start
+    fs.unlink(pathimage, (err => {
+    if (!err) {
+
+    // Series data
+    const series = search.series
+    series.forEach( async (i) => {
+      const videourl = i.url
+      const videntifier = i.identifier
+      const pathvideo = videourl.replace("https://api.bluebox.website/","");
+      const find = await UploadSeriesFile.findOneAndDelete({ "url" : videourl })
+      const findseriesdata = await Tvseriesdata.findOneAndDelete({"identified": videntifier})
+      fs.unlink(pathvideo, (err => {
+        if (err)  res.status(400).json(err);
+      }))
+    })
+    // Series data
+    }
+    }))
+    res.status(200).json({ message: `Document ${ identifier } has been deleted..`})
+    // Delete Start
+  }
+  catch (error) {
+    res.status(400).json({ message: error.message })
   }
 })
 

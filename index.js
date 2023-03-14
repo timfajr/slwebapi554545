@@ -3,7 +3,7 @@ var app = express()
 var PORT = 3000
 var HOST = '0.0.0.0'
 const hosturl = "https://api.bluebox.website/"
-const datenow = Date.now()
+var datenow = Date.now()
 const cors = require('cors')
 const bodyParser = require("body-parser");
 
@@ -59,12 +59,35 @@ const authenticateadminJWT = (req, res, next) => {
   }
 }
 
-
 // Upload Mechanics
 const multer = require("multer")
 const path = require("path")
 const { UploadFile } = require("./models/upload")
 const { UploadImage } = require("./models/upload_image")
+const { UploadSeriesFile } = require("./models/upload_seriesfile")
+const { UploadSeriesImage } = require("./models/upload_seriesimage")
+
+// Tv Series Data
+
+const TvStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/series");
+  },
+  filename: (req, file, cb) => {
+    const ext = file.mimetype.split("/")[1];
+    cb(null, `${file.originalname}-${datenow}.${ext}`)
+  },
+})
+
+const TvImageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/series/images/");
+  },
+  filename: (req, file, cb) => {
+    const ext = file.mimetype.split("/")[1];
+    cb(null, `${file.originalname}-${datenow}.${ext}`)
+  },
+})
 
 // Genre Mongoose
 const Moviedata = require('./models/moviedata');
@@ -122,6 +145,16 @@ const imageFilter = (req, file, cb) => {
   }
 };
 
+const seriesupload = multer({
+  storage: TvStorage,
+  fileFilter: multerFilter,
+});
+
+const seriesimageupload = multer({
+  storage: TvImageStorage,
+  fileFilter: imageFilter,
+});
+
 const fileupload = multer({
   storage: multerStorage,
   fileFilter: multerFilter,
@@ -135,8 +168,12 @@ const imageupload = multer({
 // DataBase Connection
 const mongoose = require('mongoose')
 
+// Domain setting
+const databaseurl = 'mongodb://dataAdmin:AdminXx@bluebox.website/api_test_db'
+//const databaseurl = 'mongodb://dataAdmin:AdminXx@localhost:28017/api_test_db'
+
 mongoose.connect(
-  'mongodb://dataAdmin:AdminXx@bluebox.website/api_test_db',
+  databaseurl ,
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -166,6 +203,7 @@ var router = express.Router()
 // Routes
 const admin = require('./router/admin')
 const movie = require('./router/movie')
+const series = require('./router/series')
 const user = require('./router/user')
 
 const http = require('http').createServer(app);
@@ -200,6 +238,39 @@ router.get('/', (req, res) => {
   res.send('<h1>Bluebox API Beta V.1 🚀</h1>' + '<p> Developed By Getown Resident </p>');
 })
 
+router.post('/uploadseries',authenticateadminJWT, seriesupload.single('myVideo'), async (req , res) => {
+  try {
+      const ext = req.file.mimetype.split("/")[1];
+      const filename = `${req.file.originalname}-${datenow}.${ext}`
+      const newFile = new UploadSeriesFile({ name: filename , url : hosturl + 'uploads/series/'+ filename });
+      await newFile.save()
+      res.status(200).json({
+        message: "success",
+        data: { name: filename , url : hosturl + 'uploads/series/'+ filename }
+      })
+      datenow = Date.now()
+  } catch (error) {
+    res.status(400).send({ error: error.message })
+  }
+})
+
+router.post('/uploadseriesimage',authenticateadminJWT, seriesimageupload.single('myImage'), async (req , res) => {
+  try {
+      const ext = req.file.mimetype.split("/")[1];
+      const filename = `${req.file.originalname}-${datenow}.${ext}`
+      const newFile = new UploadSeriesImage({ name: filename , url : hosturl + 'uploads/series/images/'+ filename });
+      await newFile.save()
+      res.status(200).json({
+        message: "success",
+        data: { name: filename , url : hosturl + 'uploads/series/images/'+ filename }
+      })
+      datenow = Date.now()
+  } catch (error) {
+    res.status(400).send({ error: error.message })
+  }
+})
+
+
 router.post('/upload',authenticateadminJWT, fileupload.single('myVideo'), async (req , res) => {
   try {
       const ext = req.file.mimetype.split("/")[1];
@@ -210,7 +281,7 @@ router.post('/upload',authenticateadminJWT, fileupload.single('myVideo'), async 
         message: "success",
         data: { name: filename , url : hosturl + 'uploads/movies/'+ filename }
       })
-
+      datenow = Date.now()
   } catch (error) {
     res.status(400).send({ error: error.message })
   }
@@ -226,7 +297,7 @@ router.post('/uploadimage',authenticateadminJWT, imageupload.single('myImage'), 
         message: "success",
         data: { name: filename , url : hosturl + 'uploads/movies/images/'+ filename }
       })
-
+      datenow = Date.now()
   } catch (error) {
     res.status(400).send({ error: error.message })
   }
@@ -466,7 +537,6 @@ io.on('connection', (socket) => {
     // Page Change Event
     socket.on('page', (data) => {
       Object.values(Room).forEach( val => {
-        console.log(data)
         // Parse Object
         const obj = data;
         const roomid = obj.roomid
@@ -519,6 +589,7 @@ app.use(router)
 app.use('/user', user)
 app.use('/admin/', admin)
 app.use('/movie/', movie)
+app.use('/tvseries/', series)
 app.use("/uploads", express.static(__dirname + "/uploads/"))
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
